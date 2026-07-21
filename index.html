@@ -79,6 +79,9 @@
   .card .thumb img{width:100%;height:100%;object-fit:cover;display:block}
   .card .thumb .noimg{position:absolute;inset:0;display:grid;place-items:center;color:var(--line-2)}
   .card .thumb .noimg .mi{font-size:2.4rem}
+  .card .thumb .pcount{position:absolute;top:9px;left:9px;font-size:.6rem;font-weight:700;display:flex;align-items:center;gap:3px;
+    padding:3px 7px;border-radius:999px;background:rgba(15,14,16,.72);backdrop-filter:blur(6px);color:var(--ink-dim)}
+  .card .thumb .pcount .mi{font-size:.8rem}
   .status-chip{position:absolute;top:9px;right:9px;font-size:.58rem;font-weight:700;letter-spacing:.08em;
     padding:4px 9px;border-radius:999px;background:rgba(15,14,16,.72);backdrop-filter:blur(6px);text-transform:uppercase}
   .status-chip.forsale{color:var(--gold)} .status-chip.sold{color:var(--sold)}
@@ -137,12 +140,27 @@
   .modal-head .x:hover{background:var(--surface-2)}
   .modal-body{padding:8px 20px 24px}
 
-  /* photo zone */
+  /* photo zone + strip */
   .photozone{aspect-ratio:1;max-height:340px;background:var(--surface-2);border:2px dashed var(--line-2);
-    border-radius:var(--r);display:grid;place-items:center;overflow:hidden;position:relative;margin-bottom:8px}
+    border-radius:var(--r);display:grid;place-items:center;overflow:hidden;position:relative;margin-bottom:8px;cursor:pointer}
   .photozone img{width:100%;height:100%;object-fit:cover}
   .photozone .ph{text-align:center;color:var(--ink-faint);padding:22px}
   .photozone .ph .mi{font-size:2.6rem;margin-bottom:8px;color:var(--line-2)}
+  .photostrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}
+  .photostrip::-webkit-scrollbar{display:none}
+  .pthumb{position:relative;width:62px;height:78px;border-radius:10px;overflow:hidden;background:var(--surface-2);
+    border:1px solid var(--line);flex-shrink:0}
+  .pthumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .pthumb.primary{border-color:var(--blush)}
+  .pthumb-x{position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.62);
+    display:grid;place-items:center;color:#fff} .pthumb-x .mi{font-size:.9rem}
+  .pbadge{position:absolute;bottom:0;left:0;right:0;font-size:.52rem;text-transform:uppercase;letter-spacing:.06em;
+    text-align:center;background:var(--blush);color:#231a16;padding:2px;font-weight:700}
+  .pthumb.add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-faint);
+    font-size:.58rem;text-transform:uppercase;letter-spacing:.06em;border-style:dashed;cursor:pointer}
+  .pthumb.add .mi{font-size:1.3rem}
+  .photostrip.view .pthumb{cursor:pointer}
+  .photostrip.view .pthumb.primary{border-color:var(--blush)}
   .tag-hint{font-size:.74rem;color:var(--ink-faint);margin-top:9px;line-height:1.4}
   .autotag-note{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--gold);
     background:rgba(212,175,55,.09);border:1px solid rgba(212,175,55,.22);padding:10px 13px;border-radius:var(--r-sm);margin-top:11px}
@@ -166,7 +184,7 @@
   .seg button.on{background:var(--blush);color:#231a16;font-weight:700}
 
   /* detail */
-  .hero{aspect-ratio:1;max-height:380px;border-radius:var(--r);overflow:hidden;background:var(--surface-2);margin-bottom:18px;position:relative}
+  .hero{aspect-ratio:1;max-height:380px;border-radius:var(--r);overflow:hidden;background:var(--surface-2);margin-bottom:10px;position:relative}
   .hero img{width:100%;height:100%;object-fit:cover}
   .hero .noimg{position:absolute;inset:0;display:grid;place-items:center}
   .hero .noimg .mi{font-size:3.4rem;color:var(--line-2)}
@@ -182,16 +200,25 @@
   .actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
   .actions .btn{flex:1;min-width:130px}
 
-  /* outfit builder */
-  .slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:8px}
-  .slot{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);aspect-ratio:1;
-    display:grid;place-items:center;overflow:hidden;position:relative;cursor:pointer;transition:.15s}
-  .slot:hover{border-color:var(--blush-deep)}
-  .slot img{width:100%;height:100%;object-fit:cover}
-  .slot .slot-label{position:absolute;top:0;left:0;right:0;padding:10px 12px;font-size:.64rem;letter-spacing:.12em;
-    text-transform:uppercase;font-weight:600;color:var(--ink-dim);
-    background:linear-gradient(rgba(0,0,0,.6),transparent);z-index:1}
-  .slot .plus{color:var(--line-2)} .slot .plus .mi{font-size:1.9rem}
+  /* ===== Fits lookbook ===== */
+  .lookbook{display:flex;flex-direction:column;gap:12px;margin-bottom:6px}
+  .look-row{display:flex;align-items:center;gap:10px}
+  .look-arrow{width:42px;height:42px;flex-shrink:0;border-radius:50%;background:var(--surface-2);
+    border:1px solid var(--line);display:grid;place-items:center;color:var(--ink-dim);transition:.15s}
+  .look-arrow:hover{border-color:var(--blush-deep);color:var(--blush)}
+  .look-arrow .mi{font-size:1.5rem}
+  .look-item{flex:1;height:158px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+  .look-item img{width:100%;height:100%;object-fit:cover}
+  .look-item .noimg .mi{font-size:2.6rem;color:var(--line-2)}
+  .look-meta{position:absolute;left:0;right:0;bottom:0;padding:10px 13px;
+    background:linear-gradient(transparent,rgba(15,14,16,.92));display:flex;flex-direction:column;gap:1px}
+  .look-name{font-family:var(--disp);font-size:.9rem;font-weight:600}
+  .look-empty{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--line-2);
+    font-size:.64rem;text-transform:uppercase;letter-spacing:.1em}
+  .look-empty .mi{font-size:1.9rem}
+  .look-slot-tag{position:absolute;top:0;left:0;padding:9px 12px;font-size:.6rem;letter-spacing:.12em;
+    text-transform:uppercase;font-weight:600;color:var(--ink-dim);background:linear-gradient(rgba(0,0,0,.55),transparent);z-index:1}
   .fits-head{display:flex;align-items:center;gap:12px;margin:26px 2px 16px}
   .fits-head h3{font-family:var(--disp);font-size:1.15rem;font-weight:600;flex:1}
   .outfit-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:13px}
@@ -244,8 +271,8 @@
     <div class="vhead"><h2>Fits</h2><span class="spacer"></span>
       <button class="btn sm ghost" id="clearFit">Clear</button>
       <button class="btn sm" id="saveFit"><span class="mi">auto_awesome</span>Save fit</button></div>
-    <p class="vsub">Style a look from what you own.</p>
-    <div class="slot-grid" id="slotGrid"></div>
+    <p class="vsub">Arrow through each layer to style a head-to-toe look.</p>
+    <div class="lookbook" id="lookbook"></div>
     <div class="fits-head"><h3>Saved fits</h3></div>
     <div id="outfitList"></div>
   </section>
@@ -271,9 +298,10 @@
   <div class="modal">
     <div class="modal-head"><h3 id="addTitle">Add a piece</h3><button class="x" data-close><span class="mi">close</span></button></div>
     <div class="modal-body">
-      <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+      <input type="file" id="photoInput" accept="image/*" multiple hidden>
       <div class="photozone" id="photozone"></div>
-      <div class="tag-hint">Get the neck tag or care label in frame — that's how the AI reads the brand.</div>
+      <div class="photostrip" id="photoStrip"></div>
+      <div class="tag-hint">Snap the <b>front, back, and the tag</b> — the tag shot is how the AI reads the brand.</div>
       <div class="autotag-note" id="autotagNote" style="display:none"><span class="mi">auto_awesome</span><span id="autotagText"></span></div>
 
       <div class="field"><label class="eyebrow">Item name</label><input id="f-name" placeholder="e.g. Oversized denim jacket"></div>
@@ -310,26 +338,17 @@
   </div>
 </div>
 
-<!-- ============ PICKER ============ -->
-<div class="modal-back" id="pickModal">
-  <div class="modal">
-    <div class="modal-head"><h3 id="pickTitle">Pick a piece</h3><button class="x" data-close><span class="mi">close</span></button></div>
-    <div class="modal-body"><div class="grid" id="pickGrid"></div></div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
 /* ============================================================
    Rack — closet inventory / styling / resale  (web app)
-   Self-contained. IndexedDB for photos + data. No backend for
-   core features; AI auto-tag calls AUTOTAG_ENDPOINT.
+   IndexedDB storage. Multi-photo per piece. AI auto-tag.
    ============================================================ */
 
 const CATEGORIES = ["Top","Bottom","Dress","Outerwear","Shoes","Hat","Bag","Accessory"];
 const CONDITIONS = ["New with tags","Like new","Good","Worn"];
-const SLOTS = ["Outerwear","Top","Bottom","Shoes"];
+const SLOTS = ["Outerwear","Top","Bottom","Shoes"];   // lookbook layers, top→bottom
 
 // Vision auto-tag endpoint. Default = deployed Supabase edge fn (works on phone).
 // Local dev: run server.mjs, then in the console:
@@ -380,14 +399,18 @@ const DB = (()=> {
 /* ---------- state ---------- */
 let items=[], outfits=[];
 let filterCat="All", searchQ="";
-let editing=null, pendingPhoto=null, pendingStatus="keep";
-let currentFit={}, pickSlot=null;
+let editing=null, pendingPhotos=[], pendingStatus="keep";
+let acFirst=true;                 // let only the first photo set category
+let currentFit={};                // {slot:itemId}
 
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36);
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const mi=n=>`<span class="mi">${n}</span>`;
+/* normalize single-photo (legacy) or multi-photo items */
+const photosOf=i=>(i.photos&&i.photos.length)?i.photos:(i.photo?[i.photo]:[]);
+const primaryPhoto=i=>photosOf(i)[0]||null;
 
 /* ---------- color detection ---------- */
 const NAMED_COLORS=[
@@ -453,9 +476,7 @@ function catLabel(c){return c==="Top"?"Tops":c==="Bottom"?"Bottoms":c==="Dress"?
 /* ============================================================
    RENDER — Closet
    ============================================================ */
-function renderCount(){
-  $("#pieceCount").textContent=`${items.length} piece${items.length!==1?"s":""}`;
-}
+function renderCount(){ $("#pieceCount").textContent=`${items.length} piece${items.length!==1?"s":""}`; }
 function renderChips(){
   const cats=["All",...CATEGORIES];
   $("#chips").innerHTML=cats.map(c=>{
@@ -472,15 +493,16 @@ function renderCloset(){
   if(searchQ){const q=searchQ.toLowerCase();
     list=list.filter(i=>(i.name+" "+i.brand+" "+i.color+" "+i.cat).toLowerCase().includes(q));}
   const g=$("#closetGrid");
-  if(!items.length){
-    g.className="";
+  if(!items.length){g.className="";
     g.innerHTML=`<div class="empty">${mi("checkroom")}<h3>Your closet's empty</h3><p>Tap <b>+</b> to snap your first piece.</p></div>`;return;}
   if(!list.length){g.className="";g.innerHTML=`<div class="empty">${mi("search_off")}<h3>Nothing matches</h3></div>`;return;}
   g.className="grid";
-  g.innerHTML=list.map(i=>`
-    <div class="card" data-id="${i.id}">
+  g.innerHTML=list.map(i=>{
+    const p=primaryPhoto(i), n=photosOf(i).length;
+    return `<div class="card" data-id="${i.id}">
       <div class="thumb">
-        ${i.photo?`<img src="${i.photo}" alt="${esc(i.name)}">`:`<div class="noimg">${mi(ICON[i.cat]||"checkroom")}</div>`}
+        ${p?`<img src="${p}" alt="${esc(i.name)}">`:`<div class="noimg">${mi(ICON[i.cat]||"checkroom")}</div>`}
+        ${n>1?`<span class="pcount">${mi("photo_library")}${n}</span>`:""}
         ${i.status!=="keep"?`<span class="status-chip ${i.status}">${i.status==="forsale"?"For sale":"Sold"}</span>`:""}
       </div>
       <div class="cbody">
@@ -491,16 +513,46 @@ function renderCloset(){
           ${i.size?`<span class="faint">· ${esc(i.size)}</span>`:""}
         </div>
       </div>
-    </div>`).join("");
+    </div>`;}).join("");
 }
 
-/* ---------- Fits ---------- */
-function renderSlots(){
-  $("#slotGrid").innerHTML=SLOTS.map(slot=>{
-    const it=items.find(x=>x.id===currentFit[slot]);
-    return `<div class="slot" data-slot="${slot}">
-      <span class="slot-label">${slot}</span>
-      ${it&&it.photo?`<img src="${it.photo}">`:it?`<div class="plus">${mi(ICON[it.cat]||"checkroom")}</div>`:`<div class="plus">${mi("add")}</div>`}
+/* ============================================================
+   FITS — head-to-toe lookbook with per-layer arrows
+   ============================================================ */
+function fitCandidates(slot){
+  return items.filter(i=>{
+    if(slot==="Outerwear")return i.cat==="Outerwear";
+    if(slot==="Top")return i.cat==="Top"||i.cat==="Dress";
+    if(slot==="Bottom")return i.cat==="Bottom";
+    if(slot==="Shoes")return i.cat==="Shoes";
+    return false;
+  });
+}
+function cycleFit(slot,dir){
+  const cands=fitCandidates(slot); if(!cands.length)return;
+  const ring=[null,...cands.map(c=>c.id)];
+  let idx=ring.indexOf(currentFit[slot]??null); if(idx<0)idx=0;
+  idx=(idx+dir+ring.length)%ring.length;
+  if(ring[idx]==null) delete currentFit[slot]; else currentFit[slot]=ring[idx];
+  renderLook();
+}
+function renderLook(){
+  const layers=SLOTS.filter(s=>fitCandidates(s).length);
+  const wrap=$("#lookbook");
+  if(!layers.length){
+    wrap.innerHTML=`<div class="empty">${mi("checkroom")}<h3>No pieces to style yet</h3><p>Add a few tops, bottoms, and shoes.</p></div>`;return;}
+  wrap.innerHTML=layers.map(slot=>{
+    const it=items.find(x=>x.id===currentFit[slot]); const p=it&&primaryPhoto(it);
+    return `<div class="look-row">
+      <button class="look-arrow" data-slot="${slot}" data-dir="-1">${mi("chevron_left")}</button>
+      <div class="look-item">
+        <span class="look-slot-tag">${slot}</span>
+        ${it
+          ? (p?`<img src="${p}">`:`<div class="noimg">${mi(ICON[it.cat]||"checkroom")}</div>`)
+          : `<div class="look-empty">${mi("add")}<span>${slot}</span></div>`}
+        ${it?`<div class="look-meta"><span class="eyebrow blush">${esc(it.brand||"—")}</span><span class="look-name">${esc(it.name||"Untitled")}</span></div>`:""}
+      </div>
+      <button class="look-arrow" data-slot="${slot}" data-dir="1">${mi("chevron_right")}</button>
     </div>`;
   }).join("");
 }
@@ -512,12 +564,22 @@ function renderOutfits(){
     return `<div class="outfit-card">
       <div class="of-name">${mi("auto_awesome")}${esc(o.name)}<span class="faint tiny" style="margin-left:auto">${thumbs.length} pieces</span>
         <button class="x tiny" data-delfit="${o.id}" style="width:28px;height:28px">${mi("close")}</button></div>
-      <div class="of-thumbs">${thumbs.map(t=>t.photo?`<img src="${t.photo}">`:`<div class="of-ph">${mi(ICON[t.cat]||"checkroom")}</div>`).join("")}</div>
+      <div class="of-thumbs">${thumbs.map(t=>{const p=primaryPhoto(t);return p?`<img src="${p}">`:`<div class="of-ph">${mi(ICON[t.cat]||"checkroom")}</div>`;}).join("")}</div>
     </div>`;
   }).join("");
 }
+async function saveFit(){
+  const picked=Object.keys(currentFit).filter(k=>currentFit[k]);
+  if(picked.length<2){toast("Style at least 2 layers");return;}
+  const name=prompt("Name this fit:","Fit "+(outfits.length+1));
+  if(name===null)return;
+  const o={id:uid(),created:Date.now(),name:name||"Untitled fit",items:{...currentFit}};
+  await DB.put("outfits",o);outfits.push(o);currentFit={};renderLook();renderOutfits();toast("Fit saved ✓");
+}
 
-/* ---------- Sell ---------- */
+/* ============================================================
+   SELL
+   ============================================================ */
 function buildListing(i){
   const price=i.market||i.paid||"";
   const title=[i.brand,i.name].filter(Boolean).join(" ")+(i.size?` — Size ${i.size}`:"");
@@ -537,9 +599,9 @@ function renderSell(){
   const s=$("#sellList");
   if(!list.length){s.innerHTML=`<div class="empty">${mi("sell")}<h3>Nothing listed</h3><p>Mark a piece <b>For sale</b> to build a listing.</p></div>`;return;}
   s.innerHTML=list.map(i=>{
-    const L=buildListing(i);
+    const L=buildListing(i), p=primaryPhoto(i);
     return `<div class="sell-card" data-id="${i.id}">
-      ${i.photo?`<img src="${i.photo}">`:`<div class="noimg">${mi(ICON[i.cat]||"checkroom")}</div>`}
+      ${p?`<img src="${p}">`:`<div class="noimg">${mi(ICON[i.cat]||"checkroom")}</div>`}
       <div class="sc-body">
         <div class="sc-top"><div>
           <div class="eyebrow blush">${esc(i.brand||"—")}</div>
@@ -566,14 +628,18 @@ function renderSell(){
   }).join("");
 }
 
-/* ---------- Detail ---------- */
+/* ============================================================
+   DETAIL (with photo gallery)
+   ============================================================ */
 function attr(label,val){return `<div class="attr"><div class="eyebrow">${label}</div><div class="attr-v">${val}</div></div>`;}
 function openDetail(id){
   const i=items.find(x=>x.id===id); if(!i)return;
+  const ph=photosOf(i);
   $("#detailTitle").textContent=i.name||"Piece";
   $("#detailBody").innerHTML=`
-    <div class="hero">${i.photo?`<img src="${i.photo}">`:`<div class="noimg">${mi(ICON[i.cat]||"checkroom")}</div>`}</div>
-    <div class="eyebrow blush">${esc(i.brand||"Details")}</div>
+    <div class="hero" id="detailHero">${ph[0]?`<img src="${ph[0]}">`:`<div class="noimg">${mi(ICON[i.cat]||"checkroom")}</div>`}</div>
+    ${ph.length>1?`<div class="photostrip view" id="detailStrip">${ph.map((p,idx)=>`<button class="pthumb ${idx===0?"primary":""}" data-view="${idx}"><img src="${p}"></button>`).join("")}</div>`:""}
+    <div class="eyebrow blush" style="margin-top:14px">${esc(i.brand||"Details")}</div>
     <h2 class="disp" style="font-size:1.5rem;font-weight:600;margin-top:5px">${esc(i.name||"Untitled")}</h2>
     <div class="resale-row"><span class="eyebrow">Estimated resale</span><span class="gold-price">${money(i.market)||"—"}</span></div>
     <div class="attr-grid">
@@ -595,6 +661,11 @@ function openDetail(id){
       <button class="btn ghost" data-edit="${i.id}">${mi("edit")}Edit</button>
       <button class="btn ghost danger" data-del="${i.id}">${mi("delete")}Delete</button>
     </div>`;
+  // photo gallery
+  $$("#detailStrip [data-view]").forEach(b=>b.onclick=()=>{
+    $("#detailHero").innerHTML=`<img src="${ph[+b.dataset.view]}">`;
+    $$("#detailStrip .pthumb").forEach(t=>t.classList.toggle("primary",t===b));
+  });
   $$("#detailSeg [data-dstatus]").forEach(b=>b.onclick=async()=>{
     i.status=b.dataset.dstatus; await DB.put("items",i);
     openDetail(id); renderCloset(); renderSell();
@@ -610,14 +681,15 @@ function openDetail(id){
 }
 
 /* ============================================================
-   ADD / EDIT
+   ADD / EDIT  (multi-photo)
    ============================================================ */
 function fillSelects(){
   $("#f-cat").innerHTML=CATEGORIES.map(c=>`<option value="${c}">${catLabel(c)}</option>`).join("");
   $("#f-cond").innerHTML=CONDITIONS.map(c=>`<option>${c}</option>`).join("");
 }
 function openAdd(item){
-  editing=item||null; pendingPhoto=item?item.photo:null;
+  editing=item||null; acFirst=true;
+  pendingPhotos = item ? photosOf(item).slice() : [];
   pendingStatus=item?item.status:"keep";
   $("#addTitle").textContent=item?"Edit piece":"Add a piece";
   $("#f-name").value=item?.name||""; $("#f-brand").value=item?.brand||"";
@@ -626,21 +698,29 @@ function openAdd(item){
   $("#f-paid").value=item?.paid||""; $("#f-market").value=item?.market||"";
   $("#f-notes").value=item?.notes||"";
   $$("#statusSeg button").forEach(b=>b.classList.toggle("on",b.dataset.status===pendingStatus));
-  updatePhotozone(); $("#autotagNote").style.display="none";
+  renderPhotos(); $("#autotagNote").style.display="none";
   openModal("#addModal");
 }
-function updatePhotozone(){
-  $("#photozone").innerHTML=pendingPhoto?`<img src="${pendingPhoto}">`
-    :`<div class="ph">${mi("photo_camera")}<div>Tap to snap or upload</div><div class="tiny" style="margin-top:4px">auto-detects color on its own</div></div>`;
+function renderPhotos(){
+  $("#photozone").innerHTML=pendingPhotos[0]
+    ? `<img src="${pendingPhotos[0]}">`
+    : `<div class="ph">${mi("photo_camera")}<div>Tap to snap the garment</div><div class="tiny" style="margin-top:4px">front, back, and the tag</div></div>`;
+  $("#photoStrip").innerHTML=pendingPhotos.map((p,idx)=>`
+      <div class="pthumb ${idx===0?"primary":""}"><img src="${p}" data-primary="${idx}">
+        <button class="pthumb-x" data-remove="${idx}">${mi("close")}</button>
+        ${idx===0?`<span class="pbadge">Cover</span>`:""}</div>`).join("")
+    + `<button class="pthumb add" id="addPhoto">${mi("add_a_photo")}<span>Add</span></button>`;
 }
-async function handlePhoto(file){
-  if(!file)return;
-  const {url,img}=await fileToDataUrl(file);
-  pendingPhoto=url; updatePhotozone();
-  const col=detectColor(img);
-  if(col) $("#f-color").value=col.name;
-  if(!$("#f-cat").value && $("#f-name").value) $("#f-cat").value=inferCat($("#f-name").value);
-  autoTag(url,col);
+async function handlePhotos(fileList){
+  const files=[...fileList]; if(!files.length)return;
+  for(const f of files){
+    const {url,img}=await fileToDataUrl(f);
+    pendingPhotos.push(url); renderPhotos();
+    const col=detectColor(img);
+    if(col && !$("#f-color").value) $("#f-color").value=col.name;
+    await autoTag(url,col);
+  }
+  $("#photoInput").value="";
 }
 async function autoTag(dataUrl,col){
   const note=$("#autotagNote"), text=$("#autotagText");
@@ -655,29 +735,30 @@ async function autoTag(dataUrl,col){
     const t=await r.json();
     if(t.error) throw new Error(t.error);
     if(t.brand && !$("#f-brand").value) $("#f-brand").value=t.brand;
-    if(t.category && CATEGORIES.includes(t.category)) $("#f-cat").value=t.category;
+    if(acFirst && t.category && CATEGORIES.includes(t.category)){ $("#f-cat").value=t.category; acFirst=false; }
     if(t.name_suggestion && !$("#f-name").value) $("#f-name").value=t.name_suggestion;
     if(t.size && !$("#f-size").value) $("#f-size").value=t.size;
-    if(t.condition && CONDITIONS.includes(t.condition)) $("#f-cond").value=t.condition;
+    if(t.condition && CONDITIONS.includes(t.condition) && $("#f-cond").value==="Good") $("#f-cond").value=t.condition;
     if(t.color && !$("#f-color").value) $("#f-color").value=t.color;
-    const label=[t.brand,t.name_suggestion].filter(Boolean).join(" ")||t.category||"item";
+    const label=[$("#f-brand").value,$("#f-name").value].filter(Boolean).join(" ")||t.category||"item";
     text.innerHTML=`Tagged: <b>${esc(label)}</b>`;
   }catch(e){
     note.style.color="var(--ink-faint)";
     text.innerHTML=col
-      ? `Detected <b>${col.name}</b> locally. Run <code>server.mjs</code> or deploy the endpoint for AI brand/category tagging.`
+      ? `Detected <b>${col.name}</b> locally. Deploy the endpoint for AI brand/category tagging.`
       : `Auto-tag offline — add a photo endpoint to enable it.`;
   }
 }
 async function saveItem(){
   const name=$("#f-name").value.trim();
-  if(!name && !pendingPhoto){toast("Add a photo or name first");return;}
+  if(!name && !pendingPhotos.length){toast("Add a photo or name first");return;}
   const it=editing||{id:uid(),created:Date.now()};
   Object.assign(it,{
     name, brand:$("#f-brand").value.trim(), size:$("#f-size").value.trim(),
     cat:$("#f-cat").value||inferCat(name), color:$("#f-color").value.trim(),
     cond:$("#f-cond").value, paid:$("#f-paid").value, market:$("#f-market").value,
-    notes:$("#f-notes").value.trim(), status:pendingStatus, photo:pendingPhoto
+    notes:$("#f-notes").value.trim(), status:pendingStatus,
+    photos:pendingPhotos.slice(), photo:pendingPhotos[0]||null
   });
   await DB.put("items",it);
   if(!editing) items.push(it);
@@ -692,7 +773,7 @@ function switchView(v){
   $$(".view").forEach(s=>s.classList.remove("active"));
   $(`#view-${v}`).classList.add("active");
   $$("nav.tabs button").forEach(b=>b.classList.toggle("on",b.dataset.view===v));
-  if(v==="outfits"){renderSlots();renderOutfits();}
+  if(v==="outfits"){renderLook();renderOutfits();}
   if(v==="sell") renderSell();
   window.scrollTo(0,0);
 }
@@ -710,16 +791,30 @@ function wire(){
   $("#search").oninput=e=>{searchQ=e.target.value;renderCloset();};
   $("#chips").onclick=e=>{const c=e.target.closest("[data-cat]");if(!c)return;filterCat=c.dataset.cat;renderCloset();};
   $("#closetGrid").onclick=e=>{const c=e.target.closest("[data-id]");if(c)openDetail(c.dataset.id);};
+
+  // photos
   $("#photozone").onclick=()=>$("#photoInput").click();
-  $("#photoInput").onchange=e=>handlePhoto(e.target.files[0]);
+  $("#photoInput").onchange=e=>handlePhotos(e.target.files);
+  $("#photoStrip").onclick=e=>{
+    if(e.target.closest("#addPhoto")){$("#photoInput").click();return;}
+    const rm=e.target.closest("[data-remove]");
+    if(rm){pendingPhotos.splice(+rm.dataset.remove,1);renderPhotos();return;}
+    const pr=e.target.closest("[data-primary]");
+    if(pr){const idx=+pr.dataset.primary; if(idx>0){const[m]=pendingPhotos.splice(idx,1);pendingPhotos.unshift(m);renderPhotos();} return;}
+  };
+
   $("#statusSeg").onclick=e=>{const b=e.target.closest("[data-status]");if(!b)return;
     pendingStatus=b.dataset.status;$$("#statusSeg button").forEach(x=>x.classList.toggle("on",x===b));};
   $("#saveItem").onclick=saveItem;
-  $("#slotGrid").onclick=e=>{const s=e.target.closest("[data-slot]");if(!s)return;openPicker(s.dataset.slot);};
-  $("#clearFit").onclick=()=>{currentFit={};renderSlots();};
+
+  // fits lookbook
+  $("#lookbook").onclick=e=>{const a=e.target.closest("[data-slot]");if(!a)return;cycleFit(a.dataset.slot,+a.dataset.dir);};
+  $("#clearFit").onclick=()=>{currentFit={};renderLook();};
   $("#saveFit").onclick=saveFit;
   $("#outfitList").onclick=async e=>{const d=e.target.closest("[data-delfit]");if(!d)return;
     await DB.del("outfits",d.dataset.delfit);outfits=outfits.filter(o=>o.id!==d.dataset.delfit);renderOutfits();toast("Fit removed");};
+
+  // sell
   $("#sellList").onclick=e=>{
     const t=e.target.closest("button"); if(!t)return;
     const id=t.dataset.id||t.dataset.listing||t.dataset.copy||t.dataset.mp||t.dataset.fbpage;
@@ -730,35 +825,8 @@ function wire(){
     if(t.dataset.mp){navigator.clipboard.writeText(buildListing(i).desc);window.open("https://www.facebook.com/marketplace/create/item","_blank");toast("Listing copied — paste in Marketplace");return;}
     if(t.dataset.fbpage){toast("FB Page auto-post wires to your Graph API tokens");return;}
   };
-  $(".wordmark").ondblclick=seedDemo;
-}
 
-function openPicker(slot){
-  pickSlot=slot;
-  const relevant=items.filter(i=>{
-    if(slot==="Outerwear")return i.cat==="Outerwear";
-    if(slot==="Top")return["Top","Dress"].includes(i.cat);
-    if(slot==="Bottom")return i.cat==="Bottom";
-    if(slot==="Shoes")return i.cat==="Shoes";
-    return true;
-  });
-  $("#pickTitle").textContent=`Pick ${slot}`;
-  $("#pickGrid").innerHTML=relevant.length?relevant.map(i=>`
-    <div class="card" data-pick="${i.id}">
-      <div class="thumb">${i.photo?`<img src="${i.photo}">`:`<div class="noimg">${mi(ICON[i.cat]||"checkroom")}</div>`}</div>
-      <div class="cbody"><div class="cname">${esc(i.name||"Untitled")}</div></div>
-    </div>`).join(""):`<div class="empty"><p>No ${slot.toLowerCase()} in your closet yet.</p></div>`;
-  $$("#pickGrid [data-pick]").forEach(c=>c.onclick=()=>{
-    currentFit[slot]=c.dataset.pick;closeModal("#pickModal");renderSlots();});
-  openModal("#pickModal");
-}
-async function saveFit(){
-  const picked=Object.keys(currentFit).filter(k=>currentFit[k]);
-  if(picked.length<2){toast("Pick at least 2 pieces");return;}
-  const name=prompt("Name this fit:","Fit "+(outfits.length+1));
-  if(name===null)return;
-  const o={id:uid(),created:Date.now(),name:name||"Untitled fit",items:{...currentFit}};
-  await DB.put("outfits",o);outfits.push(o);currentFit={};renderSlots();renderOutfits();toast("Fit saved ✓");
+  $(".wordmark").ondblclick=seedDemo;
 }
 
 async function seedDemo(){
@@ -771,7 +839,7 @@ async function seedDemo(){
     {name:"Slip midi dress",brand:"Reformation",cat:"Dress",color:"Burgundy",size:"S",cond:"New with tags",paid:"178",market:"110",status:"forsale"},
     {name:"Baseball cap",brand:"Carhartt",cat:"Hat",color:"Brown",size:"OS",cond:"Good",paid:"22",market:"12",status:"keep"}
   ];
-  for(const d of demo){const it={id:uid(),created:Date.now()+Math.random()*1000,photo:null,notes:"",...d};await DB.put("items",it);items.push(it);}
+  for(const d of demo){const it={id:uid(),created:Date.now()+Math.random()*1000,photos:[],photo:null,notes:"",...d};await DB.put("items",it);items.push(it);}
   renderCloset();toast("Demo pieces added ✓");
 }
 
