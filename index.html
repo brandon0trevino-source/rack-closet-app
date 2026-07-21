@@ -229,6 +229,27 @@
   .of-thumbs .of-ph{width:66px;height:82px;border-radius:9px;flex-shrink:0;background:var(--surface-2);display:grid;place-items:center}
   .of-thumbs .of-ph .mi{color:var(--line-2)}
 
+  /* ===== avatar / mannequin ===== */
+  .stage{background:radial-gradient(120% 82% at 50% 8%, var(--surface-2) 0%, var(--bg) 74%);
+    border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;place-items:center;margin-bottom:16px}
+  .manne{width:auto;height:360px;max-width:100%;filter:drop-shadow(0 18px 26px rgba(0,0,0,.45))}
+  #avatarPreview{padding:12px} #avatarPreview .manne{height:270px}
+  .look-controls{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+  .lc-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 10px}
+  .lc-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;text-align:center}
+  .lc-name{font-family:var(--disp);font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .body-picker{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:3px}
+  .body-picker::-webkit-scrollbar{display:none}
+  .body-opt{flex-shrink:0;width:86px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);
+    padding:9px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink-dim);font-size:.72rem;font-weight:600}
+  .body-opt.on{border-color:var(--blush);color:var(--ink)}
+  .body-opt .manne{height:94px;filter:none} .body-opt>*{pointer-events:none}
+  .skin-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .skin-row input[type=color]{width:50px;height:44px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface-2);padding:3px;cursor:pointer}
+  .face-row{display:flex;align-items:center;gap:12px}
+  .face-thumb{position:relative;width:60px;height:60px;border-radius:50%;overflow:hidden;border:1px solid var(--blush);flex-shrink:0}
+  .face-thumb img{width:100%;height:100%;object-fit:cover}
+
   /* sell */
   .sell-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:13px;display:flex;gap:14px}
   .sell-card>img,.sell-card>.noimg{width:82px;height:102px;object-fit:cover;border-radius:11px;background:var(--surface-2);flex-shrink:0}
@@ -269,10 +290,12 @@
   <!-- ============ FITS ============ -->
   <section class="view" id="view-outfits">
     <div class="vhead"><h2>Fits</h2><span class="spacer"></span>
+      <button class="btn sm ghost" id="editAvatar"><span class="mi">face</span>Avatar</button>
       <button class="btn sm ghost" id="clearFit">Clear</button>
       <button class="btn sm" id="saveFit"><span class="mi">auto_awesome</span>Save fit</button></div>
-    <p class="vsub">Arrow through each layer to style a head-to-toe look.</p>
-    <div class="lookbook" id="lookbook"></div>
+    <p class="vsub">Dress your avatar — arrow each layer to build the look. Tap <b>Avatar</b> to set your body + skin tone.</p>
+    <div class="stage" id="mannequinWrap"></div>
+    <div class="look-controls" id="lookControls"></div>
     <div class="fits-head"><h3>Saved fits</h3></div>
     <div id="outfitList"></div>
   </section>
@@ -330,6 +353,28 @@
   </div>
 </div>
 
+<!-- ============ AVATAR ============ -->
+<div class="modal-back" id="avatarModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Your avatar</h3><button class="x" data-close><span class="mi">close</span></button></div>
+    <div class="modal-body">
+      <div class="stage" id="avatarPreview"></div>
+      <div class="field"><label class="eyebrow">Body shape — pick what feels like you</label>
+        <div class="body-picker" id="bodyPicker"></div></div>
+      <div class="field"><label class="eyebrow">Skin tone</label>
+        <div class="skin-row">
+          <input type="color" id="skinColor" value="#c69a76">
+          <button class="btn sm ghost" id="skinFromArm"><span class="mi">photo_camera</span>Match from a photo of your arm</button>
+        </div></div>
+      <div class="field"><label class="eyebrow">Your face (optional)</label>
+        <div class="face-row" id="faceRow"></div></div>
+      <input type="file" id="armInput" accept="image/*" capture="environment" hidden>
+      <input type="file" id="faceInput" accept="image/*" capture="user" hidden>
+      <button class="btn block" id="saveAvatar" style="margin-top:22px"><span class="mi">check</span>Save avatar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ DETAIL ============ -->
 <div class="modal-back" id="detailModal">
   <div class="modal">
@@ -359,6 +404,15 @@ const AUTOTAG_ENDPOINT =
 
 const ICON = {Top:"apparel",Bottom:"apparel",Dress:"woman",Outerwear:"checkroom",
   Shoes:"footprint",Hat:"checkroom",Bag:"shopping_bag",Accessory:"diamond"};
+
+// Avatar body silhouettes (half-widths from center) — pick what feels like you.
+const BODIES = {
+  slim:    {label:"Slim",     sh:30, wa:22, hi:28, leg:14},
+  average: {label:"Average",  sh:37, wa:29, hi:36, leg:18},
+  athletic:{label:"Athletic", sh:43, wa:32, hi:38, leg:19},
+  curvy:   {label:"Curvy",    sh:34, wa:28, hi:46, leg:22},
+  broad:   {label:"Broad",    sh:47, wa:40, hi:44, leg:23}
+};
 
 /* ---------- IndexedDB ---------- */
 const DB = (()=> {
@@ -402,6 +456,7 @@ let filterCat="All", searchQ="";
 let editing=null, pendingPhotos=[], pendingStatus="keep";
 let acFirst=true;                 // let only the first photo set category
 let currentFit={};                // {slot:itemId}
+let avatar=null;                  // {body, skin, face}
 
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
@@ -536,22 +591,92 @@ function cycleFit(slot,dir){
   if(ring[idx]==null) delete currentFit[slot]; else currentFit[slot]=ring[idx];
   renderLook();
 }
+/* ---------- avatar profile ---------- */
+function getAvatar(){
+  if(!avatar){ try{avatar=JSON.parse(localStorage.getItem("rack_avatar"));}catch(e){}
+    if(!avatar) avatar={body:"average",skin:"#c69a76",face:null}; }
+  return avatar;
+}
+function saveAvatarProfile(){ localStorage.setItem("rack_avatar",JSON.stringify(getAvatar())); }
+/* average skin RGB from the center of an arm photo -> hex */
+function avgHex(img){
+  const c=document.createElement("canvas"),s=30;c.width=s;c.height=s;
+  const ctx=c.getContext("2d");ctx.drawImage(img,0,0,s,s);
+  const d=ctx.getImageData(s*.25,s*.25,s*.5,s*.5).data;
+  let r=0,g=0,b=0,n=0;
+  for(let i=0;i<d.length;i+=4){ if(d[i+3]<200)continue; r+=d[i];g+=d[i+1];b+=d[i+2];n++; }
+  if(!n) return getAvatar().skin;
+  const h=x=>Math.round(x/n).toString(16).padStart(2,"0");
+  return "#"+h(r)+h(g)+h(b);
+}
+/* build the dressed mannequin as an SVG string (clip garments into body zones) */
+function buildMannequin(av,fit,opts){
+  fit=fit||{}; const p=(opts&&opts.pfx)||("m"+Math.random().toString(36).slice(2,6));
+  const b=BODIES[av.body]||BODIES.average, skin=av.skin||"#c69a76";
+  const sh=b.sh,wa=b.wa,hi=b.hi,leg=b.leg,cx=100;
+  const torso=`M${cx-sh},100 C${cx-sh},144 ${cx-wa},162 ${cx-wa},198 L${cx-hi},238 L${cx+hi},238 L${cx+wa},198 C${cx+wa},162 ${cx+sh},144 ${cx+sh},100 Z`;
+  const legL=`M${cx-hi},240 L${cx-5},240 L${cx-5},376 L${cx-leg-5},376 Z`;
+  const legR=`M${cx+hi},240 L${cx+5},240 L${cx+5},376 L${cx+leg+5},376 Z`;
+  const footL=`M${cx-leg-7},374 L${cx-3},374 L${cx-3},392 L${cx-leg-16},392 Z`;
+  const footR=`M${cx+leg+7},374 L${cx+3},374 L${cx+3},392 L${cx+leg+16},392 Z`;
+  const armL=`M${cx-sh+3},104 L${cx-sh-11},112 L${cx-sh-3},206 L${cx-sh+11},200 Z`;
+  const armR=`M${cx+sh-3},104 L${cx+sh+11},112 L${cx+sh+3},206 L${cx+sh-11},200 Z`;
+  const top=items.find(x=>x.id===fit.Top),bottom=items.find(x=>x.id===fit.Bottom),
+        shoes=items.find(x=>x.id===fit.Shoes),outer=items.find(x=>x.id===fit.Outerwear);
+  const Z=(it,clip)=>{ if(!it)return"";
+    const ph=primaryPhoto(it);
+    if(ph) return `<image href="${ph}" x="0" y="0" width="200" height="400" clip-path="url(#${clip})" preserveAspectRatio="xMidYMid slice"/>`;
+    const col=swatchColor(it.color);
+    return `<rect x="0" y="0" width="200" height="400" fill="${col!=="transparent"?col:"#4a4650"}" clip-path="url(#${clip})"/>`;
+  };
+  return `<svg viewBox="0 0 200 400" class="manne" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <clipPath id="${p}T"><path d="${torso}"/></clipPath>
+      <clipPath id="${p}L"><path d="${legL}"/><path d="${legR}"/></clipPath>
+      <clipPath id="${p}F"><path d="${footL}"/><path d="${footR}"/></clipPath>
+      <clipPath id="${p}H"><circle cx="${cx}" cy="50" r="30"/></clipPath>
+    </defs>
+    <g fill="${skin}" stroke="rgba(0,0,0,.16)" stroke-width="1" stroke-linejoin="round">
+      <path d="${armL}"/><path d="${armR}"/>
+      <circle cx="${cx}" cy="50" r="30"/>
+      <rect x="${cx-9}" y="74" width="18" height="26" rx="7"/>
+      <path d="${torso}"/><path d="${legL}"/><path d="${legR}"/><path d="${footL}"/><path d="${footR}"/>
+    </g>
+    ${av.face?`<image href="${av.face}" x="${cx-30}" y="20" width="60" height="60" clip-path="url(#${p}H)" preserveAspectRatio="xMidYMid slice"/>`:""}
+    ${Z(bottom,p+"L")}
+    ${Z(shoes,p+"F")}
+    ${Z(outer||top,p+"T")}
+  </svg>`;
+}
+
+/* ---------- avatar setup modal ---------- */
+function openAvatar(){ getAvatar(); renderAvatarModal(); openModal("#avatarModal"); }
+function renderAvatarModal(){
+  const av=getAvatar();
+  $("#avatarPreview").innerHTML=buildMannequin(av,currentFit,{pfx:"avp"});
+  $("#skinColor").value=av.skin;
+  $("#bodyPicker").innerHTML=Object.entries(BODIES).map(([k,b])=>`
+    <button class="body-opt ${av.body===k?"on":""}" data-body="${k}">
+      ${buildMannequin({body:k,skin:av.skin,face:null},{},{pfx:"bp"+k})}<span>${b.label}</span></button>`).join("");
+  $("#faceRow").innerHTML=av.face
+    ? `<div class="face-thumb"><img src="${av.face}"><button class="pthumb-x" id="removeFace">${mi("close")}</button></div>
+       <button class="btn sm ghost" id="changeFace">${mi("photo_camera")}Change</button>`
+    : `<button class="btn sm ghost" id="addFace">${mi("add_a_photo")}Add your face</button>`;
+}
+
+/* ---------- Fits: dressed avatar + per-layer controls ---------- */
 function renderLook(){
+  $("#mannequinWrap").innerHTML=buildMannequin(getAvatar(),currentFit,{pfx:"mn"});
   const layers=SLOTS.filter(s=>fitCandidates(s).length);
-  const wrap=$("#lookbook");
+  const lc=$("#lookControls");
   if(!layers.length){
-    wrap.innerHTML=`<div class="empty">${mi("checkroom")}<h3>No pieces to style yet</h3><p>Add a few tops, bottoms, and shoes.</p></div>`;return;}
-  wrap.innerHTML=layers.map(slot=>{
-    const it=items.find(x=>x.id===currentFit[slot]); const p=it&&primaryPhoto(it);
-    return `<div class="look-row">
+    lc.innerHTML=`<div class="empty">${mi("checkroom")}<h3>No pieces to style yet</h3><p>Add a few tops, bottoms, and shoes.</p></div>`;return;}
+  lc.innerHTML=layers.map(slot=>{
+    const it=items.find(x=>x.id===currentFit[slot]);
+    const name=it?((it.brand?it.brand+" · ":"")+(it.name||"Untitled")):"— none —";
+    return `<div class="lc-row">
       <button class="look-arrow" data-slot="${slot}" data-dir="-1">${mi("chevron_left")}</button>
-      <div class="look-item">
-        <span class="look-slot-tag">${slot}</span>
-        ${it
-          ? (p?`<img src="${p}">`:`<div class="noimg">${mi(ICON[it.cat]||"checkroom")}</div>`)
-          : `<div class="look-empty">${mi("add")}<span>${slot}</span></div>`}
-        ${it?`<div class="look-meta"><span class="eyebrow blush">${esc(it.brand||"—")}</span><span class="look-name">${esc(it.name||"Untitled")}</span></div>`:""}
-      </div>
+      <div class="lc-mid"><span class="eyebrow">${slot}</span><span class="lc-name">${esc(name)}</span></div>
       <button class="look-arrow" data-slot="${slot}" data-dir="1">${mi("chevron_right")}</button>
     </div>`;
   }).join("");
@@ -807,10 +932,23 @@ function wire(){
     pendingStatus=b.dataset.status;$$("#statusSeg button").forEach(x=>x.classList.toggle("on",x===b));};
   $("#saveItem").onclick=saveItem;
 
-  // fits lookbook
-  $("#lookbook").onclick=e=>{const a=e.target.closest("[data-slot]");if(!a)return;cycleFit(a.dataset.slot,+a.dataset.dir);};
+  // fits — layer arrows dress the avatar
+  $("#lookControls").onclick=e=>{const a=e.target.closest("[data-slot]");if(!a)return;cycleFit(a.dataset.slot,+a.dataset.dir);};
   $("#clearFit").onclick=()=>{currentFit={};renderLook();};
   $("#saveFit").onclick=saveFit;
+
+  // avatar setup
+  $("#editAvatar").onclick=openAvatar;
+  $("#bodyPicker").onclick=e=>{const b=e.target.closest("[data-body]");if(!b)return;getAvatar().body=b.dataset.body;renderAvatarModal();};
+  $("#skinColor").onchange=e=>{getAvatar().skin=e.target.value;renderAvatarModal();};
+  $("#skinFromArm").onclick=()=>$("#armInput").click();
+  $("#armInput").onchange=async e=>{const f=e.target.files[0];if(!f)return;const{img}=await fileToDataUrl(f,220);getAvatar().skin=avgHex(img);renderAvatarModal();e.target.value="";toast("Skin tone matched ✓");};
+  $("#faceRow").onclick=e=>{
+    if(e.target.closest("#removeFace")){getAvatar().face=null;renderAvatarModal();return;}
+    if(e.target.closest("#addFace")||e.target.closest("#changeFace")){$("#faceInput").click();return;}
+  };
+  $("#faceInput").onchange=async e=>{const f=e.target.files[0];if(!f)return;const{url}=await fileToDataUrl(f,360);getAvatar().face=url;renderAvatarModal();e.target.value="";};
+  $("#saveAvatar").onclick=()=>{saveAvatarProfile();closeModal("#avatarModal");renderLook();toast("Avatar saved ✓");};
   $("#outfitList").onclick=async e=>{const d=e.target.closest("[data-delfit]");if(!d)return;
     await DB.del("outfits",d.dataset.delfit);outfits=outfits.filter(o=>o.id!==d.dataset.delfit);renderOutfits();toast("Fit removed");};
 
