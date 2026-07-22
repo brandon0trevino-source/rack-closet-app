@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   /* ===== Obsidian & Blush design system ===== */
   :root{
@@ -43,6 +44,12 @@
   .wordmark b{color:var(--blush);font-weight:700}
   header .spacer{flex:1}
   header .htag{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+  .acct-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-dim)}
+  .acct-btn .mi{font-size:1.25rem}
+  .acct-btn[data-state=done]{color:var(--blush);border-color:var(--blush-deep)}
+  .acct-btn[data-state=sync] .mi{animation:spin 1s linear infinite}
+  .acct-btn[data-state=err]{color:#e88}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
   main{max-width:1080px;margin:0 auto;padding:18px 16px}
   .view{display:none;animation:fade .28s ease}
@@ -274,7 +281,7 @@
 <header>
   <span class="wordmark">R<b>·</b>CK</span>
   <span class="spacer"></span>
-  <span class="htag">The Wardrobe Index</span>
+  <button class="acct-btn" id="acctBtn" data-state="off" title="Account & sync"><span class="mi">cloud_off</span></button>
 </header>
 
 <main>
@@ -353,6 +360,14 @@
   </div>
 </div>
 
+<!-- ============ ACCOUNT ============ -->
+<div class="modal-back" id="authModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Account &amp; sync</h3><button class="x" data-close><span class="mi">close</span></button></div>
+    <div class="modal-body" id="authBody"></div>
+  </div>
+</div>
+
 <!-- ============ AVATAR ============ -->
 <div class="modal-back" id="avatarModal">
   <div class="modal">
@@ -401,6 +416,12 @@ const SLOTS = ["Outerwear","Top","Bottom","Shoes"];   // lookbook layers, top→
 const AUTOTAG_ENDPOINT =
   localStorage.getItem("rack_autotag") ||
   "https://erqehimqvutcqqddooxw.supabase.co/functions/v1/closet-autotag";
+
+// Supabase cloud sync (optional — app is fully usable logged out / offline).
+const SB_URL="https://erqehimqvutcqqddooxw.supabase.co";
+const SB_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVycWVoaW1xdnV0Y3FxZGRvb3h3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MDgyNDEsImV4cCI6MjA5MDk4NDI0MX0.o9qFlSCqPTd0Zn8-wcJlCsUQuDKSwoJZLPSFfAYmrhE";
+let sb=null;   // initialized in boot() once the CDN library is ready
+let user=null;
 
 const ICON = {Top:"apparel",Bottom:"apparel",Dress:"woman",Outerwear:"checkroom",
   Shoes:"footprint",Hat:"checkroom",Bag:"shopping_bag",Accessory:"diamond"};
@@ -699,7 +720,7 @@ async function saveFit(){
   const name=prompt("Name this fit:","Fit "+(outfits.length+1));
   if(name===null)return;
   const o={id:uid(),created:Date.now(),name:name||"Untitled fit",items:{...currentFit}};
-  await DB.put("outfits",o);outfits.push(o);currentFit={};renderLook();renderOutfits();toast("Fit saved ✓");
+  await DB.put("outfits",o);outfits.push(o);currentFit={};renderLook();renderOutfits();cloudPush("outfits",o);toast("Fit saved ✓");
 }
 
 /* ============================================================
@@ -793,14 +814,14 @@ function openDetail(id){
   });
   $$("#detailSeg [data-dstatus]").forEach(b=>b.onclick=async()=>{
     i.status=b.dataset.dstatus; await DB.put("items",i);
-    openDetail(id); renderCloset(); renderSell();
+    openDetail(id); renderCloset(); renderSell(); cloudPush("items",i);
     toast(i.status==="forsale"?"Listed for sale ✓":"Updated");
   });
   $("#detailBody [data-edit]").onclick=()=>{closeModal("#detailModal");openAdd(i);};
   $("#detailBody [data-del]").onclick=async()=>{
     if(!confirm("Delete this piece?"))return;
     await DB.del("items",i.id); items=items.filter(x=>x.id!==i.id);
-    closeModal("#detailModal"); renderCloset(); renderSell(); toast("Deleted");
+    closeModal("#detailModal"); renderCloset(); renderSell(); cloudDel("items",i.id); toast("Deleted");
   };
   openModal("#detailModal");
 }
@@ -888,6 +909,7 @@ async function saveItem(){
   await DB.put("items",it);
   if(!editing) items.push(it);
   closeModal("#addModal"); renderCloset(); renderSell();
+  cloudPush("items",it);
   toast(editing?"Saved ✓":"Added to closet ✓");
 }
 
@@ -948,9 +970,9 @@ function wire(){
     if(e.target.closest("#addFace")||e.target.closest("#changeFace")){$("#faceInput").click();return;}
   };
   $("#faceInput").onchange=async e=>{const f=e.target.files[0];if(!f)return;const{url}=await fileToDataUrl(f,360);getAvatar().face=url;renderAvatarModal();e.target.value="";};
-  $("#saveAvatar").onclick=()=>{saveAvatarProfile();closeModal("#avatarModal");renderLook();toast("Avatar saved ✓");};
+  $("#saveAvatar").onclick=()=>{saveAvatarProfile();closeModal("#avatarModal");renderLook();cloudPushProfile();toast("Avatar saved ✓");};
   $("#outfitList").onclick=async e=>{const d=e.target.closest("[data-delfit]");if(!d)return;
-    await DB.del("outfits",d.dataset.delfit);outfits=outfits.filter(o=>o.id!==d.dataset.delfit);renderOutfits();toast("Fit removed");};
+    await DB.del("outfits",d.dataset.delfit);outfits=outfits.filter(o=>o.id!==d.dataset.delfit);renderOutfits();cloudDel("outfits",d.dataset.delfit);toast("Fit removed");};
 
   // sell
   $("#sellList").onclick=e=>{
@@ -977,16 +999,134 @@ async function seedDemo(){
     {name:"Slip midi dress",brand:"Reformation",cat:"Dress",color:"Burgundy",size:"S",cond:"New with tags",paid:"178",market:"110",status:"forsale"},
     {name:"Baseball cap",brand:"Carhartt",cat:"Hat",color:"Brown",size:"OS",cond:"Good",paid:"22",market:"12",status:"keep"}
   ];
-  for(const d of demo){const it={id:uid(),created:Date.now()+Math.random()*1000,photos:[],photo:null,notes:"",...d};await DB.put("items",it);items.push(it);}
+  for(const d of demo){const it={id:uid(),created:Date.now()+Math.floor(Math.random()*1000),photos:[],photo:null,notes:"",...d};await DB.put("items",it);items.push(it);}
   renderCloset();toast("Demo pieces added ✓");
+}
+
+/* ============================================================
+   CLOUD SYNC (optional — only active when signed in)
+   ============================================================ */
+function setSyncState(s){ const b=$("#acctBtn"); if(!b)return;
+  b.dataset.state=s; b.querySelector(".mi").textContent={off:"cloud_off",sync:"cloud_sync",done:"cloud_done",err:"cloud_alert"}[s]||"cloud_off"; }
+function blobToDataUrl(blob){return new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(blob);});}
+
+async function ensurePhotosUploaded(it){
+  it.cloudPhotos=it.cloudPhotos||[];
+  const ph=it.photos||[]; const out=[];
+  for(let i=0;i<ph.length;i++){
+    if(it.cloudPhotos[i]){ out.push(it.cloudPhotos[i]); continue; }
+    try{
+      const path=`${user.id}/${it.id}/${i}.jpg`;
+      const blob=await (await fetch(ph[i])).blob();
+      const {error}=await sb.storage.from("rack-photos").upload(path,blob,{upsert:true,contentType:"image/jpeg"});
+      out.push(error?null:path);
+    }catch(e){ out.push(null); }
+  }
+  it.cloudPhotos=out;
+  return out.filter(Boolean);
+}
+async function cloudPush(store,obj){
+  if(!user||!sb) return;
+  try{ setSyncState("sync");
+    if(store==="items"){
+      const cp=await ensurePhotosUploaded(obj);
+      await DB.put("items",obj); // save cloudPhotos locally
+      await sb.from("rack_items").upsert({id:obj.id,user_id:user.id,name:obj.name||"",brand:obj.brand||"",size:obj.size||"",
+        cat:obj.cat||"",color:obj.color||"",cond:obj.cond||"",paid:String(obj.paid||""),market:String(obj.market||""),
+        notes:obj.notes||"",status:obj.status||"keep",photos:cp,created:Math.round(obj.created||0),updated_at:new Date().toISOString()});
+    } else if(store==="outfits"){
+      await sb.from("rack_outfits").upsert({id:obj.id,user_id:user.id,name:obj.name||"",items:obj.items||{},created:Math.round(obj.created||0),updated_at:new Date().toISOString()});
+    }
+    setSyncState("done");
+  }catch(e){ console.warn("cloudPush",e); setSyncState("err"); }
+}
+async function cloudDel(store,id){
+  if(!user||!sb) return;
+  try{ await sb.from(store==="items"?"rack_items":"rack_outfits").delete().eq("id",id); }catch(e){ console.warn("cloudDel",e); }
+}
+async function cloudPushProfile(){ if(!user||!sb)return; try{ await sb.from("rack_profiles").upsert({user_id:user.id,avatar:getAvatar(),updated_at:new Date().toISOString()}); }catch(e){} }
+
+let syncing=false;
+async function syncAll(){
+  if(!user||!sb||syncing) return;
+  syncing=true;
+  setSyncState("sync");
+  try{
+    const [ri,ro,rp]=await Promise.all([
+      sb.from("rack_items").select("*"),
+      sb.from("rack_outfits").select("*"),
+      sb.from("rack_profiles").select("*").maybeSingle()
+    ]);
+    const cItems=ri.data||[], cOutfits=ro.data||[];
+    const haveItem=new Set(items.map(i=>i.id)), haveOut=new Set(outfits.map(o=>o.id));
+    // cloud -> local (download photos we don't have)
+    for(const r of cItems){ if(haveItem.has(r.id))continue;
+      const photos=[];
+      for(const p of (r.photos||[])){ try{ const {data}=await sb.storage.from("rack-photos").download(p); if(data) photos.push(await blobToDataUrl(data)); }catch(e){} }
+      const it={id:r.id,created:r.created||Date.now(),name:r.name,brand:r.brand,size:r.size,cat:r.cat,color:r.color,
+        cond:r.cond,paid:r.paid,market:r.market,notes:r.notes,status:r.status,photos,photo:photos[0]||null,cloudPhotos:r.photos||[]};
+      await DB.put("items",it); items.push(it);
+    }
+    for(const r of cOutfits){ if(haveOut.has(r.id))continue;
+      const o={id:r.id,created:r.created||Date.now(),name:r.name,items:r.items||{}}; await DB.put("outfits",o); outfits.push(o); }
+    // local -> cloud (migrate anything not in cloud yet — this saves your phone's closet up)
+    const cItemIds=new Set(cItems.map(r=>r.id)), cOutIds=new Set(cOutfits.map(r=>r.id));
+    for(const it of items){ if(!cItemIds.has(it.id)) await cloudPush("items",it); }
+    for(const o of outfits){ if(!cOutIds.has(o.id)) await cloudPush("outfits",o); }
+    // avatar
+    if(rp.data&&rp.data.avatar&&Object.keys(rp.data.avatar).length){ avatar=rp.data.avatar; localStorage.setItem("rack_avatar",JSON.stringify(avatar)); }
+    else await cloudPushProfile();
+    renderCloset(); renderSell();
+    setSyncState("done");
+  }catch(e){ console.warn("syncAll",e); setSyncState("err"); }
+  finally{ syncing=false; }
+}
+
+/* ---------- account modal ---------- */
+function openAuth(){ renderAuthModal(); openModal("#authModal"); }
+function renderAuthModal(){
+  const body=$("#authBody");
+  if(user){
+    body.innerHTML=`<p class="muted" style="margin-bottom:16px">Signed in as <b>${esc(user.email)}</b>.<br>Your closet + photos sync to the cloud automatically — safe on any device.</p>
+      <button class="btn ghost block" id="signOut">${mi("logout")}Sign out</button>`;
+    $("#signOut").onclick=async()=>{ await sb.auth.signOut(); };
+  } else {
+    body.innerHTML=`
+      <p class="muted" style="margin-bottom:14px">Make an account to back your closet up to the cloud, safe on any device.</p>
+      <div class="field"><label class="eyebrow">Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@email.com"></div>
+      <div class="field"><label class="eyebrow">Password</label><input id="authPass" type="password" autocomplete="current-password" placeholder="at least 6 characters"></div>
+      <button class="btn block" id="doSignup" style="margin-top:18px">${mi("cloud")}Create account</button>
+      <button class="btn ghost block" id="doLogin" style="margin-top:10px">${mi("login")}I already have one — Sign in</button>
+      <div id="authMsg" class="tiny" style="margin-top:12px;color:var(--ink-faint)"></div>`;
+    const em=()=>$("#authEmail").value.trim(), pw=()=>$("#authPass").value, msg=t=>$("#authMsg").textContent=t;
+    $("#doSignup").onclick=async()=>{ if(!em()||!pw())return msg("Enter an email + password."); if(!sb)return msg("Cloud not configured."); msg("Creating…");
+      const {data,error}=await sb.auth.signUp({email:em(),password:pw()});
+      msg(error?error.message:(data.session?"Account created ✓":"Account made — check your email to confirm, then Sign in.")); };
+    $("#doLogin").onclick=async()=>{ if(!em()||!pw())return msg("Enter your email + password."); if(!sb)return msg("Cloud not configured."); msg("Signing in…");
+      const {error}=await sb.auth.signInWithPassword({email:em(),password:pw()}); if(error)msg(error.message); };
+  }
 }
 
 /* ---------- boot ---------- */
 (async function(){
+  if(window.supabase && SB_ANON && SB_ANON.length>100){ try{ sb=window.supabase.createClient(SB_URL,SB_ANON); }catch(e){ console.warn("sb init",e); } }
   wire();
   items=await DB.all("items");
   outfits=await DB.all("outfits");
   renderCloset();
+  if(sb){
+    $("#acctBtn").onclick=openAuth;
+    sb.auth.onAuthStateChange((_e,session)=>{
+      user=session?.user||null;
+      setSyncState(user?"done":"off");
+      renderAuthModal();
+      if(user){ closeModal("#authModal"); syncAll(); }
+    });
+    const {data}=await sb.auth.getSession();
+    if(data&&data.session){ user=data.session.user; setSyncState("done"); syncAll(); }
+  } else {
+    $("#acctBtn").onclick=()=>toast("Cloud sync not configured");
+  }
 })();
 </script>
 </body>
