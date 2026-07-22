@@ -297,12 +297,10 @@
   <!-- ============ FITS ============ -->
   <section class="view" id="view-outfits">
     <div class="vhead"><h2>Fits</h2><span class="spacer"></span>
-      <button class="btn sm ghost" id="editAvatar"><span class="mi">face</span>Avatar</button>
       <button class="btn sm ghost" id="clearFit">Clear</button>
       <button class="btn sm" id="saveFit"><span class="mi">auto_awesome</span>Save fit</button></div>
-    <p class="vsub">Dress your avatar — arrow each layer to build the look. Tap <b>Avatar</b> to set your body + skin tone.</p>
-    <div class="stage" id="mannequinWrap"></div>
-    <div class="look-controls" id="lookControls"></div>
+    <p class="vsub">Arrow through each layer — top, bottom, shoes — to build the look.</p>
+    <div class="lookbook" id="lookbook"></div>
     <div class="fits-head"><h3>Saved fits</h3></div>
     <div id="outfitList"></div>
   </section>
@@ -685,19 +683,23 @@ function renderAvatarModal(){
     : `<button class="btn sm ghost" id="addFace">${mi("add_a_photo")}Add your face</button>`;
 }
 
-/* ---------- Fits: dressed avatar + per-layer controls ---------- */
+/* ---------- Fits: image lookbook — flip through each layer ---------- */
 function renderLook(){
-  $("#mannequinWrap").innerHTML=buildMannequin(getAvatar(),currentFit,{pfx:"mn"});
   const layers=SLOTS.filter(s=>fitCandidates(s).length);
-  const lc=$("#lookControls");
+  const wrap=$("#lookbook");
   if(!layers.length){
-    lc.innerHTML=`<div class="empty">${mi("checkroom")}<h3>No pieces to style yet</h3><p>Add a few tops, bottoms, and shoes.</p></div>`;return;}
-  lc.innerHTML=layers.map(slot=>{
-    const it=items.find(x=>x.id===currentFit[slot]);
-    const name=it?((it.brand?it.brand+" · ":"")+(it.name||"Untitled")):"— none —";
-    return `<div class="lc-row">
+    wrap.innerHTML=`<div class="empty">${mi("checkroom")}<h3>No pieces to style yet</h3><p>Add a few tops, bottoms, and shoes.</p></div>`;return;}
+  wrap.innerHTML=layers.map(slot=>{
+    const it=items.find(x=>x.id===currentFit[slot]); const p=it&&primaryPhoto(it);
+    return `<div class="look-row">
       <button class="look-arrow" data-slot="${slot}" data-dir="-1">${mi("chevron_left")}</button>
-      <div class="lc-mid"><span class="eyebrow">${slot}</span><span class="lc-name">${esc(name)}</span></div>
+      <div class="look-item">
+        <span class="look-slot-tag">${slot}</span>
+        ${it
+          ? (p?`<img src="${p}">`:`<div class="look-empty">${mi(ICON[it.cat]||"checkroom")}</div>`)
+          : `<div class="look-empty">${mi("add")}<span>${slot}</span></div>`}
+        ${it?`<div class="look-meta"><span class="eyebrow blush">${esc(it.brand||"—")}</span><span class="look-name">${esc(it.name||"Untitled")}</span></div>`:""}
+      </div>
       <button class="look-arrow" data-slot="${slot}" data-dir="1">${mi("chevron_right")}</button>
     </div>`;
   }).join("");
@@ -954,13 +956,12 @@ function wire(){
     pendingStatus=b.dataset.status;$$("#statusSeg button").forEach(x=>x.classList.toggle("on",x===b));};
   $("#saveItem").onclick=saveItem;
 
-  // fits — layer arrows dress the avatar
-  $("#lookControls").onclick=e=>{const a=e.target.closest("[data-slot]");if(!a)return;cycleFit(a.dataset.slot,+a.dataset.dir);};
+  // fits — layer arrows flip through the clothing images
+  $("#lookbook").onclick=e=>{const a=e.target.closest("[data-slot]");if(!a)return;cycleFit(a.dataset.slot,+a.dataset.dir);};
   $("#clearFit").onclick=()=>{currentFit={};renderLook();};
   $("#saveFit").onclick=saveFit;
 
-  // avatar setup
-  $("#editAvatar").onclick=openAvatar;
+  // avatar setup (dormant — no mannequin UI right now; kept for later)
   $("#bodyPicker").onclick=e=>{const b=e.target.closest("[data-body]");if(!b)return;getAvatar().body=b.dataset.body;renderAvatarModal();};
   $("#skinColor").onchange=e=>{getAvatar().skin=e.target.value;renderAvatarModal();};
   $("#skinFromArm").onclick=()=>$("#armInput").click();
